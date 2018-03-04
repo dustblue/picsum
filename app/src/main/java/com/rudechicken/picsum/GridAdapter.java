@@ -5,14 +5,18 @@ package com.rudechicken.picsum;
  */
 
 import android.content.Context;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+
+import static com.rudechicken.picsum.MainActivity.ifError;
 
 public class GridAdapter extends RecyclerView.Adapter<GridAdapter.ViewHolder> {
 
@@ -38,8 +42,18 @@ public class GridAdapter extends RecyclerView.Adapter<GridAdapter.ViewHolder> {
                 .load(imageUrls[position])
                 .placeholder(R.drawable.ic_default)
                 .error(R.drawable.ic_error)
-                .resize(width, width)
-                .into(holder.itemImage);
+                .resize(width / 2, width / 2)
+                .into(holder.itemImage, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        ifError[holder.getAdapterPosition()] = false;
+                    }
+
+                    @Override
+                    public void onError() {
+                        ifError[holder.getAdapterPosition()] = true;
+                    }
+                });
     }
 
     @Override
@@ -49,10 +63,14 @@ public class GridAdapter extends RecyclerView.Adapter<GridAdapter.ViewHolder> {
 
     class ViewHolder extends RecyclerView.ViewHolder {
         private ImageView itemImage;
+        private ConstraintLayout parent;
 
         ViewHolder(View view) {
             super(view);
             itemImage = (ImageView) view.findViewById(R.id.item_image);
+            parent = (ConstraintLayout) view.findViewById(R.id.grid_layout_item);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width / 2, width / 2);
+            parent.setLayoutParams(params);
         }
     }
 }

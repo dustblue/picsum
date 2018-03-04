@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Picsum</string>
     <string name="image">image</string>
+    <string name="refresh">Refresh</string>
+    <string name="about">About</string>
+    <string name="exit">Exit</string>
+    <string name="lorem_picsum">Lorem Picsum</string>
+    <string name="lorem_ipsum_but_for_photos">Lorem Ipsum... but for photos</string>
 </resources>

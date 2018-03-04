@@ -14,8 +14,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.getbase.floatingactionbutton.FloatingActionButton;
-import com.getbase.floatingactionbutton.FloatingActionsMenu;
+import com.github.clans.fab.FloatingActionMenu;
+import com.github.clans.fab.FloatingActionButton;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
@@ -28,6 +28,8 @@ public class PictureActivity extends AppCompatActivity {
 
     String imageUrl, pathName;
     ImageView imageView;
+    public static int height, width;
+    FloatingActionButton fabDown, fabWall;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,14 +44,15 @@ public class PictureActivity extends AppCompatActivity {
                 + "/" + splitUrls[splitUrls.length - 1].split("=")[1] + ".jpeg";
 
         DisplayMetrics displayMetrics = this.getResources().getDisplayMetrics();
-        int w = (int) (displayMetrics.widthPixels / 1.25);
+        width = (int) (displayMetrics.widthPixels);
+        height = (int) (displayMetrics.heightPixels);
 
         imageView = findViewById(R.id.image);
         Picasso.with(this)
                 .load(imageUrl)
                 .placeholder(R.drawable.ic_default)
                 .error(R.drawable.ic_error)
-                .resize(w, w)
+                .resize(width, width)
                 .into(imageView, new Callback() {
                     @Override
                     public void onSuccess() {
@@ -62,18 +65,13 @@ public class PictureActivity extends AppCompatActivity {
                     }
                 });
 
-        FloatingActionButton fabDown = new FloatingActionButton(this);
-        fabDown.setTitle("Wallpaper");
-        fabDown.setSize(FloatingActionButton.SIZE_MINI);
-        fabDown.setIconDrawable(getDrawable(R.drawable.ic_download));
+        fabDown = findViewById(R.id.fab_down);
         fabDown.setOnClickListener(view -> {
-            downloadImage(this, imageUrl);
-            Snackbar.make(view, "Picture Downloaded!!", Snackbar.LENGTH_LONG).show();
+            downloadImage(this, imageUrl, "2160");
+            Snackbar.make(view, "Picture Downloaded!!", Snackbar.LENGTH_SHORT).show();
         });
 
-        FloatingActionButton fabWall = new FloatingActionButton(this);
-        fabWall.setTitle("Wallpaper");
-        fabWall.setIconDrawable(getDrawable(R.drawable.ic_wallpaper));
+        fabWall = findViewById(R.id.fab_wall);
         fabWall.setOnClickListener(view -> {
             try {
                 /* Custom Wallpaper Set
@@ -88,28 +86,31 @@ public class PictureActivity extends AppCompatActivity {
                 WallpaperManager m = WallpaperManager.getInstance(this);
                 try {
                     m.setBitmap(bMap);
-                    Snackbar.make(view, "Wallpaper Changed!!", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(view, "Wallpaper Changed!!", Snackbar.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             } catch (Exception e) {
                 Snackbar.make(view, "Image not downloaded!!", Snackbar.LENGTH_LONG)
-                        .setAction("Download", v -> {
-                            fabDown.callOnClick();
-                        }).show();
+                        .setAction("Download", v -> fabDown.callOnClick()).show();
             }
         });
 
-        FloatingActionsMenu fabMenu = findViewById(R.id.fab_menu);
-        fabMenu.addButton(fabDown);
-        fabMenu.addButton(fabWall);
-
+        FloatingActionMenu fabMenu = findViewById(R.id.fab_menu);
+        fabMenu.setHapticFeedbackEnabled(true);
     }
 
-    public static void downloadImage(Context context, String url) {
+    public static void downloadImage(Context context, String url, String imageRes) {
+        String[] urlParts = url.split("/");
+        String urlNew = urlParts[0] + "//" + urlParts[2]
+                + "/" + imageRes + "/" + imageRes + "/"
+                + urlParts[5];
+        Log.e("Rak", urlNew);
+
+        //FIXME Saved only if clicked twice
         Picasso.with(context)
-                .load(url)
-                .into(getTarget(url));
+                .load(urlNew)
+                .into(getTarget(urlNew));
     }
 
     private static Target getTarget(final String url) {
@@ -126,6 +127,7 @@ public class PictureActivity extends AppCompatActivity {
                         file.createNewFile();
                         FileOutputStream ostream = new FileOutputStream(file);
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 80, ostream);
+                        Log.e("Rak", "Saved to: " + pathName);
                         ostream.flush();
                         ostream.close();
                     } catch (IOException e) {

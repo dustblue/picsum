@@ -9,7 +9,8 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.WindowManager;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import java.util.Random;
 
@@ -18,6 +19,9 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog progress;
     String[] imageUrls;
     int numberOfImages = 10;
+    public static boolean[] ifError;
+    GridAdapter adapter;
+    int w;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,33 +33,43 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
 
         DisplayMetrics displayMetrics = this.getResources().getDisplayMetrics();
-        int w = (int) (displayMetrics.widthPixels / 2);
+        w = (int) (displayMetrics.widthPixels);
 
         imageUrls = new String[numberOfImages];
+        ifError = new boolean[numberOfImages];
 
-        for (int i = 0; i < numberOfImages; i++) {
-            imageUrls[i] = "https://picsum.photos/" + w + "/" + w + "/?image=" + pic();
-        }
-
-        GridAdapter adapter = new GridAdapter(this, imageUrls, w);
+        refreshImages();
+        adapter = new GridAdapter(this, imageUrls, w);
         recyclerView.setAdapter(adapter);
 
         recyclerView.addOnItemTouchListener(
                 new RecyclerItemClickListener(getApplicationContext(),
                         (view, position) -> {
-                            Log.e("Rak", imageUrls[position]);
-                            Intent i = new Intent(MainActivity.this, PictureActivity.class);
-                            i.putExtra("url", imageUrls[position]);
-                            startActivity(i);
+
+                            if (!ifError[position]) {
+                                Log.e("Rak", imageUrls[position]);
+                                Intent i = new Intent(MainActivity.this, PictureActivity.class);
+                                i.putExtra("url", imageUrls[position]);
+                                startActivity(i);
+                            } else {
+                                imageUrls[position] = "https://picsum.photos/" + w + "/" + w + "/?image=" + getRandomPic();
+                                adapter.notifyDataSetChanged();
+                            }
                         })
         );
 
     }
 
-    public int pic() {
+    public void refreshImages() {
+        for (int i = 0; i < numberOfImages; i++) {
+            ifError[i] = false;
+            imageUrls[i] = "https://picsum.photos/" + w + "/" + w + "/?image=" + getRandomPic();
+        }
+    }
+
+    public static int getRandomPic() {
         Random rand = new Random();
         return rand.nextInt(1085);
-        //TODO Remove Image not found errors
     }
 
     @Override
@@ -68,4 +82,29 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int color;
+
+        switch (item.getItemId()) {
+            case R.id.refresh:
+                refreshImages();
+                adapter.notifyDataSetChanged();
+                return true;
+            case R.id.about:
+                startActivity(new Intent(MainActivity.this, AboutActivity.class));
+                return true;
+            case R.id.exit:
+                finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 }
